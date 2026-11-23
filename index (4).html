@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>LEDESMA · Simulador de ladder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--bg:#f3f4f1;--pn:#fff;--fg:#1d2420;--mu:#68716b;--bd:#cfd5cf;--on:#12924a;--ac:#0b6e6e;--wr:#c2410c;--gr:rgba(40,90,140,.13);color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#151a17;--pn:#1e2521;--fg:#e8ede9;--mu:#98a39b;--bd:#35403a;--on:#4ade80;--ac:#5eead4;--wr:#fb923c;--gr:rgba(255,255,255,.06);color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#151a17;--pn:#1e2521;--fg:#e8ede9;--mu:#98a39b;--bd:#35403a;--on:#4ade80;--ac:#5eead4;--wr:#fb923c;--gr:rgba(255,255,255,.06);color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.4 'Barlow Semi Condensed',system-ui,sans-serif}
+header{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px 14px;border-bottom:3px solid var(--on);background:#10231c;color:#e8f3ec}
+h1{margin:0 auto 0 0;display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}.lg{font:700 28px/1 'Barlow Semi Condensed',sans-serif;letter-spacing:.16em;color:#fff;border-left:5px solid var(--on);padding-left:10px}h1 small{font:400 14px 'Barlow Semi Condensed',sans-serif;color:#9bb8a8}
+button,select,input{font:inherit;color:inherit;background:var(--pn);border:1px solid var(--bd);border-radius:6px;padding:5px 9px}
+button{cursor:pointer}button:hover{border-color:var(--ac)}button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--ac)}
+.go{background:var(--on);color:#fff;border-color:var(--on)}.stop{background:var(--wr);color:#fff;border-color:var(--wr)}
+main{display:grid;grid-template-columns:minmax(0,1fr) 270px;gap:12px;padding:12px 14px}
+@media (max-width:820px){main{grid-template-columns:1fr}}
+.card{background:var(--pn);border:1px solid var(--bd);border-radius:8px;padding:10px}
+.tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}.tabs .cur{background:var(--ac);color:var(--bg);border-color:var(--ac)}
+.form{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:10px}.form input{width:104px}
+.seg{display:flex;align-items:center;border-left:3px solid var(--fg);padding:8px 0 8px 0;margin:6px 0;overflow-x:auto;border-radius:0 6px 6px 0}
+.seg.sel{background:color-mix(in srgb,var(--ac) 10%,transparent)}
+.wire{flex:0 0 14px;height:2px;background:var(--mu)}.seg>*{flex-shrink:0}
+.col{display:flex;flex-direction:column;gap:6px;border-left:2px solid var(--mu);border-right:2px solid var(--mu);padding:0 4px}
+.col:only-child{}
+.el{position:relative;min-width:84px;text-align:center;border:1px solid var(--bd);border-radius:6px;padding:3px 8px 2px;background:var(--pn)}
+.el small{display:block;color:var(--mu);font-size:11px;white-space:nowrap}.el b{font-size:15px;white-space:nowrap}
+.el.on{border-color:var(--on);box-shadow:0 0 0 1px var(--on),0 0 12px color-mix(in srgb,var(--on) 50%,transparent)}.el.on b{color:var(--on)}
+.el i{position:absolute;top:-7px;right:-5px;font-style:normal;cursor:pointer;background:var(--pn);border:1px solid var(--bd);border-radius:50%;width:16px;height:16px;line-height:14px;font-size:11px;color:var(--wr)}
+.t{display:flex;align-items:center;gap:5px;margin:4px 0}.t span{flex:1;overflow:hidden;text-overflow:ellipsis}
+.t input{width:70px}.t .v{min-width:38px}.v.on{background:var(--on);color:#fff}
+h2{font:600 13px system-ui;margin:0 0 8px}.mu{color:var(--mu);font-size:12px}.bx{text-align:left;min-width:190px}.bx b,.bx small{display:block;text-align:center}.bx table{border-collapse:collapse;width:100%;font-size:12px}.bx td{padding:1px 4px}.bx td:last-child{text-align:right}#lad{background-image:linear-gradient(var(--gr) 1px,transparent 1px),linear-gradient(90deg,var(--gr) 1px,transparent 1px);background-size:24px 24px;border:1px solid var(--bd);border-radius:6px;padding:6px 8px;min-height:120px}footer{padding:14px;text-align:center;color:var(--mu);font-size:13px;letter-spacing:.08em}footer b{color:var(--fg)}
+</style></head><body>
+<header><h1><span class="lg">LEDESMA</span><small>Simulador de ladder · S7-1200</small></h1>
+<button id="run" class="go">▶ Simular</button><button id="rst">↺ Reiniciar valores</button></header>
+<main>
+<section class="card"><div class="tabs" id="tabs"></div>
+<div class="form">
+<select id="k"><option value="no">Contacto NA</option><option value="nc">Contacto NC</option><option value="cmp">Comparador</option><option value="coil">Bobina</option><option value="ton">TON</option><option value="ctu">CTU</option><option value="ctd">CTD</option><option value="ctud">CTUD</option><option value="norm">NORM_X</option><option value="scale">SCALE_X</option><option value="call">Llamar bloque</option></select>
+<input id="tag" list="dl" placeholder="variable o bloque">
+<select id="op"><option>&gt;</option><option>&gt;=</option><option>&lt;</option><option>&lt;=</option><option>=</option></select>
+<input id="val" placeholder="valor o variable">
+<span id="pins" style="display:contents"></span>
+<label class="mu"><input type="checkbox" id="par" style="width:auto"> en paralelo (OR)</label>
+<button id="add">Añadir al segmento</button><button id="ns">+ Segmento</button>
+</div>
+<datalist id="dl"></datalist>
+<div id="ifc" class="card" style="margin-bottom:10px"></div>
+<div id="lad"></div>
+<p class="mu">Elegí un segmento (clic) y añadí elementos. Los contactos, comparadores y el paralelo van antes; bobina, TON, CTU y llamada cierran el segmento. Verde = pasa corriente.</p></section>
+<aside class="card"><h2>Variables (tabla / DB global)</h2>
+<div class="t"><input id="nn" placeholder="nueva" style="flex:1;min-width:0"><select id="nt"><option>bool</option><option>real</option><option>int</option></select><button id="na">+</button></div>
+<div id="tg"></div></aside>
+</main>
+<footer><b>LEDESMA</b> · Simulador PLC en ladder</footer>
+<script>
+const $=s=>document.querySelector(s),esc=s=>String(s).replace(/[<>&"]/g,c=>'&#'+c.charCodeAt(0)+';');
+const DT=100;let n=0,U={},tm={},timer=null,lastKeys='';
+const S={tags:{Start:{t:'bool',v:false},Stop:{t:'bool',v:false},Motor:{t:'bool',v:false}},
+blocks:{OB1:[{cols:[[{k:'no',tag:'Start'},{k:'no',tag:'Motor'}],[{k:'nc',tag:'Stop'}]],outs:[{k:'coil',tag:'Motor'}]}]},cur:'OB1',sel:0,ifc:{},inst:{}};
+let FR=null,FRK='';function T(n,t='bool'){if(FR&&FR[n])return FR[n];return S.tags[n]||(S.tags[n]={t,v:t=='bool'?false:0})}
+function val(x){x=String(x);return x!==''&&!isNaN(x)?+x:+T(x,'real').v}
+function pass(e){const v=T(e.tag,e.k=='cmp'?'real':'bool').v;
+if(e.k=='no')return !!v;if(e.k=='nc')return !v;
+const a=+v,b=val(e.val);return{'>':a>b,'>=':a>=b,'<':a<b,'<=':a<=b,'=':a==b}[e.op]}
+function exec(name,d=0){for(const s of S.blocks[name]){
+const p=s.cols.every(c=>c.map(e=>e._p=pass(e)).some(Boolean));for(const o of s.outs){o._p=p;
+if(o.k=='coil')T(o.tag).v=p;
+else if(BOX[o.k])box(o,p);
+
+
+else if(o.k=='call'&&p&&d<5&&S.blocks[o.tag])callb(o,d)}}}
+const sym=e=>({no:'┤ ├',nc:'┤/├',coil:'( )',cmp:e.op,ton:'TON',ctu:'CTU',call:'CALL'}[e.k]);
+const lab=e=>e.k=='cmp'?esc(e.tag)+' '+esc(e.op)+' '+esc(e.val):e.k=='ton'?esc(e.tag)+' PT '+e.pt+' ms':e.k=='ctu'?esc(e.tag)+' PV '+e.pt:esc(e.tag);
+function el(e,i,c,j){e.u=e.u||++n;U[e.u]=e;const b=SP(e),x=`<i onclick='del(event,${i},${c},${j})'>×</i>`;
+if(!b)return `<div class='el' data-u='${e.u}'>${x}<small>${lab(e)}</small><b>${sym(e)}</b></div>`;
+const r=Math.max(b.i.length,b.o.length);let t=`<tr><td>${PW[e.k]||'EN'}</td><td>${e.k=='norm'||e.k=='scale'||e.k=='call'?'ENO':''}</td></tr>`;
+for(let a=0;a<r;a++)t+=`<tr><td>${b.i[a]?b.i[a]+' '+esc(e.p[b.i[a]]||''):''}</td><td>${b.o[a]?b.o[a]+' '+esc(tgt(e,b.o[a])):''}</td></tr>`;
+return `<div class='el bx' data-u='${e.u}'>${x}<small>${esc(e.k=='call'?(e.p&&e.p._inst)||'':e.tag)}</small><b>${b.n}</b><table>${t}</table></div>`}
+const BOX={ton:{n:'TON',i:['PT'],o:['Q','ET']},ctu:{n:'CTU',i:['R','PV'],o:['Q','CV']},ctd:{n:'CTD',i:['LD','PV'],o:['Q','CV']},ctud:{n:'CTUD',i:['CD','R','LD','PV'],o:['QU','QD','CV']},norm:{n:'NORM_X',i:['MIN','VALUE','MAX'],o:['OUT']},scale:{n:'SCALE_X',i:['MIN','VALUE','MAX'],o:['OUT']}};
+const PW={ton:'IN',ctu:'CU',ctd:'CD',ctud:'CU',norm:'EN',scale:'EN'};
+function tgt(e,o){return e.p[o]||(e.k=='norm'||e.k=='scale'||e.k=='call'?'':e.tag+'.'+o)}
+function num(x){x=String(x==null?'':x);return x!==''&&!isNaN(x)?+x:+T(x,'real').v}
+function ms(x){x=String(x);const m=x.match(/^T#([0-9.]+)(ms|s|m)$/i)||x.match(/^([0-9.]+)(ms|s|m)$/i);return m?+m[1]*{ms:1,s:1000,m:60000}[m[2].toLowerCase()]:num(x)}
+function bool(x){return !!(x&&T(x).v)}
+function W(n,v){if(n)T(n,typeof v=='boolean'?'bool':'real').v=v}
+function box(o,p){const q=o.p,k=o.k,kk=o.u+'@'+FRK,m=tm[kk]||(tm[kk]={et:0,cv:0,l:false,l2:false});
+if(k=='ton'){const pt=ms(q.PT);m.et=p?Math.min(m.et+DT,pt):0;W(tgt(o,'Q'),p&&m.et>=pt);W(tgt(o,'ET'),m.et)}
+else if(k=='norm'||k=='scale'){const a=num(q.MIN),b=num(q.MAX),v=num(q.VALUE);if(p&&a!=b)W(tgt(o,'OUT'),k=='norm'?(v-a)/(b-a):v*(b-a)+a)}
+else{const pv=num(q.PV),cd=bool(q.CD),up=k!='ctd'&&p&&!m.l,dn=k=='ctd'?p&&!m.l:k=='ctud'&&cd&&!m.l2;m.l=p;m.l2=cd;
+if(bool(q.R)&&k!='ctd')m.cv=0;else if(bool(q.LD)&&k!='ctu')m.cv=pv;else{if(up)m.cv++;if(dn)m.cv--}
+if(k=='ctud'){W(tgt(o,'QU'),m.cv>=pv);W(tgt(o,'QD'),m.cv<=0)}else W(tgt(o,'Q'),k=='ctu'?m.cv>=pv:m.cv<=0);W(tgt(o,'CV'),m.cv)}}
+function SPN(n){const f=S.ifc[n];return f?{n,i:f.Input.map(x=>x.n),o:f.Output.map(x=>x.n),fb:/^FB/.test(n)}:null}
+function SP(e){return e.k=='call'?(SPN(e.tag)||{n:e.tag,i:[],o:[]}):BOX[e.k]}
+function callb(o,d){const f=S.ifc[o.tag]||{Input:[],Output:[],Temp:[],Static:[]},pr=FR,pk=FRK,fb=/^FB/.test(o.tag),key=fb?(o.p._inst||o.tag):'c'+o.u;
+const rd=(s,t)=>s==null||s===''?(t=='bool'?false:0):(!isNaN(s)?+s:T(s,t).v);
+const iv=f.Input.map(x=>rd(o.p[x.n],x.t)),fr=fb?(S.inst[key]||(S.inst[key]={})):{};
+['Input','Output','Temp','Static'].forEach(s=>(f[s]||[]).forEach(x=>{if(!fr[x.n])fr[x.n]={t:x.t,v:x.t=='bool'?false:0}}));
+f.Input.forEach((x,i)=>{fr[x.n].v=iv[i]});
+FR=fr;FRK=key;exec(o.tag,d+1);FR=pr;FRK=pk;
+f.Output.forEach(x=>{const t=o.p[x.n];if(t)T(t,x.t).v=fr[x.n].v})}
+function ifcDraw(){const f=S.ifc[S.cur],d=$('#ifc');if(!f){d.style.display='none';return}d.style.display='';
+const ss=/^FB/.test(S.cur)?['Input','Output','Static','Temp']:['Input','Output','Temp'];
+d.innerHTML=`<h2>Interfaz de ${S.cur}</h2>`+ss.map(s=>`<div class='t'><b style='width:58px'>${s}</b><span>${f[s].map((x,i)=>`${esc(x.n)}: ${x.t} <u style='cursor:pointer;color:var(--wr)' onclick='S.ifc[S.cur].${s}.splice(${i},1);draw()'>×</u>`).join(' · ')||`<i class='mu'>vacío</i>`}</span></div>`).join('')+`<div class='t'><select id='is'>${ss.map(s=>`<option>${s}</option>`).join('')}</select><input id='in' placeholder='nombre'><select id='it'><option>bool</option><option>real</option><option>int</option></select><button onclick='ifcAdd()'>Añadir a la interfaz</button></div>`}
+function ifcAdd(){const x=$('#in').value.trim();if(!x)return;S.ifc[S.cur][$('#is').value].push({n:x,t:$('#it').value});draw()}
+function pins(){const k=$('#k').value,b=k=='call'?SPN($('#tag').value.trim()):BOX[k];$('#pins').innerHTML=(b&&b.fb?"<input data-p='_inst' placeholder='DB de instancia'>":'')+(b?b.i.concat(b.o).map(x=>`<input data-p='${x}' placeholder='${b.o.includes(x)?x+' → variable':x}'>`).join(''):'');$('#tag').placeholder=b?(k=='norm'||k=='scale'?'(sin instancia)':k=='call'?'bloque, ej. FC1':'instancia, ej. T1'):'variable o bloque';$('#op').style.display=$('#val').style.display=k=='cmp'?'':'none'}
+$('#k').onchange=pins;$('#tag').oninput=()=>{if($('#k').value=='call')pins()};
+function draw(){const B=S.blocks;
+$('#tabs').innerHTML=Object.keys(B).map(b=>`<button class="${b==S.cur?'cur':''}" onclick="S.cur='${b}';S.sel=0;draw()">${b=='OB1'?'OB1 (Main)':b}</button>`).join('')+'<button onclick="nb(\'FC\')">+ FC</button><button onclick="nb(\'FB\')">+ FB</button>';
+ifcDraw();pins();$('#dl').innerHTML=Object.keys(S.tags).concat(Object.keys(B)).map(x=>`<option value="${esc(x)}">`).join('');
+U={};$('#lad').innerHTML=B[S.cur].map((s,i)=>`<div class="seg ${i==S.sel?'sel':''}" onclick="S.sel=${i};draw()"><span class="mu" style="flex:0 0 22px">${i+1}</span>`+
+s.cols.map((c,ci)=>`<span class="wire"></span><div class="col">${c.map((e,j)=>el(e,i,ci,j)).join('')}</div>`).join('')+
+`<span class="wire" style="flex:1;min-width:14px"></span>${s.outs.map((o,j)=>el(o,i,-1,j)).join('<span class="wire"></span>')||'<span class="mu">vacío</span>'}<button onclick="event.stopPropagation();B_del(${i})" style="margin:0 6px">✕</button></div>`).join('');tags()}
+function del(ev,i,c,j){ev.stopPropagation();const s=S.blocks[S.cur][i];if(c<0)s.outs.splice(j,1);else{s.cols[c].splice(j,1);if(!s.cols[c].length)s.cols.splice(c,1)}draw()}
+function B_del(i){S.blocks[S.cur].splice(i,1);S.sel=0;draw()}
+function nb(t){let i=1;while(S.blocks[t+i])i++;S.blocks[t+i]=[];S.ifc[t+i]={Input:[],Output:[],Temp:[],Static:[]};S.cur=t+i;S.sel=0;draw()}
+$('#ns').onclick=()=>{S.blocks[S.cur].push({cols:[],outs:[]});S.sel=S.blocks[S.cur].length-1;draw()};
+$('#add').onclick=()=>{const s=S.blocks[S.cur][S.sel],k=$('#k').value,tag=$('#tag').value.trim();if(!s||(!tag&&k!='norm'&&k!='scale'))return;
+const e={k,tag};if(k=='cmp'){e.op=$('#op').value;e.val=$('#val').value||'0';T(tag,'real')}
+else if(k=='call'){e.p={};document.querySelectorAll('#pins input').forEach(i=>{e.p[i.dataset.p]=i.value.trim()});const f=S.ifc[tag]||{Input:[],Output:[]};f.Input.forEach(x=>{const v=e.p[x.n];if(v&&isNaN(v)&&!/^T#/i.test(v))T(v,x.t)});f.Output.forEach(x=>{const v=e.p[x.n];if(v)T(v,x.t)})}
+else if(BOX[k]){e.p={};document.querySelectorAll('#pins input').forEach(i=>{e.p[i.dataset.p]=i.value.trim()});BOX[k].i.forEach(i=>{const v=e.p[i];if(v&&isNaN(v)&&!/^T#/i.test(v)&&!/^[0-9.]+(ms|s|m)$/i.test(v))T(v,/^(R|LD|CD)$/.test(i)?'bool':'real')});BOX[k].o.forEach(o=>{const v=tgt(e,o);if(v)T(v,/^(CV|ET|OUT)$/.test(o)?'real':'bool')})}
+else if(!BOX[k]&&k!='call')T(tag);
+if(k=='coil'||BOX[k]||k=='call')s.outs.push(e);
+else if($('#par').checked&&s.cols.length)s.cols[s.cols.length-1].push(e);else s.cols.push([e]);draw()};
+$('#na').onclick=()=>{const x=$('#nn').value.trim();if(x){T(x,$('#nt').value);$('#nn').value='';draw()}};
+function tags(){const k=Object.keys(S.tags);if(k.join()!==lastKeys){lastKeys=k.join();
+$('#tg').innerHTML=k.map(x=>{const t=S.tags[x],id=encodeURIComponent(x);return t.t=='bool'?
+`<div class="t"><span>${esc(x)}</span><button class="v" data-b="${id}" onclick="S.tags[decodeURIComponent('${id}')].v^=1;tags()">0</button><button onpointerdown="S.tags[decodeURIComponent('${id}')].v=true" onpointerup="S.tags[decodeURIComponent('${id}')].v=false" onpointerleave="S.tags[decodeURIComponent('${id}')].v=false" title="Pulsador (mantener)">●</button></div>`:
+`<div class="t"><span>${esc(x)}</span><input type="number" data-n="${id}" onchange="S.tags[decodeURIComponent('${id}')].v=+this.value"></div>`}).join('')}
+document.querySelectorAll('[data-b]').forEach(b=>{const v=S.tags[decodeURIComponent(b.dataset.b)].v;b.textContent=v?1:0;b.classList.toggle('on',!!v)});
+document.querySelectorAll('[data-n]').forEach(i=>{if(document.activeElement!==i)i.value=S.tags[decodeURIComponent(i.dataset.n)].v})}
+function tick(){exec('OB1');document.querySelectorAll('.el').forEach(d=>{const e=U[d.dataset.u];if(e)d.classList.toggle('on',!!e._p)});tags()}
+$('#run').onclick=function(){if(timer){clearInterval(timer);timer=null;this.textContent='▶ Simular';this.className='go'}else{timer=setInterval(tick,DT);this.textContent='■ Detener';this.className='stop'}};
+$('#rst').onclick=()=>{tm={};S.inst={};for(const t of Object.values(S.tags))t.v=t.t=='bool'?false:0;tags()};
+draw();pins();
+</script></body></html>
